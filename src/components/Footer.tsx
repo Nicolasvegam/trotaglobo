@@ -1,5 +1,3 @@
-import { Instagram, Twitter, Facebook, Youtube } from "lucide-react";
-
 export function Footer() {
   return (
     <footer className="bg-white border-t border-neutral-200 py-8 mt-16">

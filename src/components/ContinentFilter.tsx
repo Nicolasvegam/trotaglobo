@@ -3,13 +3,12 @@ import { Button } from "@/components/ui/button";
 import { getCountryContinent } from "@/utils";
 
 interface ContinentFilterProps {
-  holidays: Holiday[];
   displayedHolidays: Holiday[];  // New prop for holidays actually being shown
   selectedContinent: string | null;
   onContinentSelect: (continent: string | null) => void;
 }
 
-export function ContinentFilter({ holidays, displayedHolidays, selectedContinent, onContinentSelect }: ContinentFilterProps) {
+export function ContinentFilter({ displayedHolidays, selectedContinent, onContinentSelect }: ContinentFilterProps) {
   // Get continents that have at least one displayed holiday
   const uniqueContinents = Array.from(
     new Set(

@@ -4,13 +4,12 @@ import { Globe } from "lucide-react";
 import { getCountryFlag } from "@/utils";
 
 interface CountryFilterProps {
-  holidays: Holiday[];
   displayedHolidays: Holiday[];  // New prop for holidays actually being shown
   selectedCountry: string | null;
   onCountrySelect: (country: string | null) => void;
 }
 
-export function CountryFilter({ holidays, displayedHolidays, selectedCountry, onCountrySelect }: CountryFilterProps) {
+export function CountryFilter({ displayedHolidays, selectedCountry, onCountrySelect }: CountryFilterProps) {
   const uniqueCountries = Array.from(
     new Set(
       displayedHolidays

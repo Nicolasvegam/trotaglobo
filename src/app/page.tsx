@@ -166,13 +166,11 @@ export default function Home() {
               </div>
               <div className="mt-4 space-y-2">
                 <ContinentFilter
-                  holidays={holidays}
                   displayedHolidays={visibleHolidays}
                   selectedContinent={selectedContinent}
                   onContinentSelect={setSelectedContinent}
                 />
                 <CountryFilter
-                  holidays={holidays}
                   displayedHolidays={visibleHolidays}
                   selectedCountry={selectedCountry}
                   onCountrySelect={setSelectedCountry}

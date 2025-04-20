@@ -1,16 +1,16 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { X, Plus, MapPin } from "lucide-react";
 import { generateHolidayColor } from "@/lib/colors";
+import { Holiday } from "@/types/holiday";
 
 interface AddHolidayModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (holiday: any) => void;
+  onAdd: (holiday: Holiday) => void;
   isPast: boolean;
 }
 
@@ -58,7 +58,7 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
 
   const handleSubmit = () => {
     // Create a new holiday object
-    const newHoliday = {
+    const newHoliday: Holiday = {
       id: Date.now().toString(),
       title,
       startDate: new Date(startDate),
@@ -70,7 +70,10 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
         name: city.name,
         position: { lat: 0, lng: 0 }, // This would be replaced with geocoding in a real app
         places: city.places.filter(place => place.trim() !== "")
-      }))
+      })),
+      countries: cities.map(city => city.name).filter(name => name.trim() !== ""),
+      description: "",
+      coverImage: ""
     };
 
     onAdd(newHoliday);

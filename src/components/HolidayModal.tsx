@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Holiday } from "@/types/holiday";
-import { MapPin, Calendar, Clock, X, Navigation } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
