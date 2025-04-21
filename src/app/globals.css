@@ -126,15 +126,54 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* iOS-specific styles */
+  input, button, select, textarea {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+  }
+
+  /* Ensure borders are visible on iOS */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Fix for iOS input zoom */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  input[type="time"],
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Fix for iOS button styles */
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar for IE, Edge and Firefox */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+/* Custom scrollbar styles */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

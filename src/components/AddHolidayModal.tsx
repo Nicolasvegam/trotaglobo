@@ -155,7 +155,7 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
 
             <div className="space-y-6">
               {cities.map((city, cityIndex) => (
-                <div key={cityIndex} className="p-4 border border-neutral-200 rounded-lg">
+                <div key={cityIndex} className="p-4 border border-neutral-200 rounded-lg -webkit-appearance: none appearance-none">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 text-neutral-400 mr-2" />
@@ -163,7 +163,7 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
                         placeholder="City name"
                         value={city.name}
                         onChange={(e) => handleCityNameChange(cityIndex, e.target.value)}
-                        className="border-0 p-0 text-base font-medium focus-visible:ring-0"
+                        className="border-0 p-0 text-base font-medium focus-visible:ring-0 -webkit-appearance: none appearance-none"
                       />
                     </div>
                     {cities.length > 1 && (
@@ -172,7 +172,7 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
                         variant="ghost"
                         size="sm"
                         onClick={() => handleRemoveCity(cityIndex)}
-                        className="h-6 w-6 p-0 text-neutral-400 hover:text-neutral-700"
+                        className="h-6 w-6 p-0 text-neutral-400 hover:text-neutral-700 -webkit-appearance: none appearance-none"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -189,7 +189,7 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
                           placeholder="Place name"
                           value={place}
                           onChange={(e) => handlePlaceChange(cityIndex, placeIndex, e.target.value)}
-                          className="flex-1"
+                          className="flex-1 -webkit-appearance: none appearance-none"
                         />
                         {city.places.length > 1 && (
                           <Button
@@ -197,7 +197,7 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemovePlace(cityIndex, placeIndex)}
-                            className="h-8 w-8 p-0 text-neutral-400 hover:text-neutral-700"
+                            className="h-8 w-8 p-0 text-neutral-400 hover:text-neutral-700 -webkit-appearance: none appearance-none"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -209,7 +209,7 @@ export function AddHolidayModal({ isOpen, onClose, onAdd, isPast }: AddHolidayMo
                       variant="ghost"
                       size="sm"
                       onClick={() => handleAddPlace(cityIndex)}
-                      className="text-xs mt-2"
+                      className="text-xs mt-2 -webkit-appearance: none appearance-none"
                     >
                       <Plus className="h-3 w-3 mr-1" /> Add Place
                     </Button>
