@@ -165,6 +165,28 @@
     color: inherit;
     cursor: pointer;
   }
+
+  /* Fix for iOS card borders */
+  .card, [class*="card"] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Fix for iOS Safari form elements */
+  select, input, textarea {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  /* Fix for iOS Safari focus styles */
+  *:focus {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* Custom scrollbar styles */
