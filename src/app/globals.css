@@ -132,6 +132,7 @@
     -webkit-appearance: none;
     appearance: none;
     border-radius: 0;
+    background-color: transparent;
   }
 
   /* Ensure borders are visible on iOS */
@@ -139,7 +140,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Fix for iOS input zoom */
+  /* Fix for iOS input zoom and styling */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -151,6 +152,12 @@
   input[type="time"],
   textarea {
     font-size: 16px !important;
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem;
   }
 
   /* Fix for iOS button styles */
@@ -164,28 +171,44 @@
     font: inherit;
     color: inherit;
     cursor: pointer;
+    border-radius: var(--radius);
   }
 
-  /* Fix for iOS card borders */
+  /* Fix for iOS card borders and backgrounds */
   .card, [class*="card"] {
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   }
 
   /* Fix for iOS Safari form elements */
   select, input, textarea {
     -webkit-appearance: none;
     appearance: none;
-    border-radius: 0;
+    border-radius: var(--radius);
     background-color: transparent;
+    border: 1px solid var(--border);
   }
 
   /* Fix for iOS Safari focus styles */
   *:focus {
     outline: none;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Additional iOS fixes for common elements */
+  [class*="bg-"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  [class*="border-"] {
+    -webkit-appearance: none;
+    appearance: none;
   }
 }
 
