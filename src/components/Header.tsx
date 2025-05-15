@@ -1,6 +1,12 @@
-import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs';
 
 export function Header() {
   return (
@@ -21,11 +27,30 @@ export function Header() {
             <div className="ml-2 font-semibold text-xl text-neutral-900">Trotaglobo</div>
           </div>
           
-          {/* User button */}
-          <div className="flex items-center">
-            <Button variant="ghost" size="icon" className="rounded-full bg-brand-primary text-white">
-              <User className="h-5 w-5" />
-            </Button>
+          {/* Auth buttons */}
+          <div className="flex items-center gap-4">
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="ghost" className="text-neutral-600 hover:text-neutral-900">
+                  Sign in
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button className="bg-brand-primary text-white hover:bg-brand-primary/90">
+                  Sign up
+                </Button>
+              </SignUpButton>
+            </SignedOut>
+            <SignedIn>
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "h-8 w-8"
+                  }
+                }}
+              />
+            </SignedIn>
           </div>
         </div>
       </div>
