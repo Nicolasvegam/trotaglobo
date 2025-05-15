@@ -9,7 +9,6 @@ import { AddHolidayModal } from "@/components/AddHolidayModal";
 import { CountryFilter } from "@/components/CountryFilter";
 import { ContinentFilter } from "@/components/ContinentFilter";
 import { Holiday } from "@/types/holiday";
-import { Header } from "@/components/Header";
 import { Plus, MapPin, Calendar,  Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,9 +56,7 @@ export default function Home() {
   const travelStats = useMemo(() => calculateTravelStats(pastHolidays), [pastHolidays]);
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <Header />
-      
+    <div className="min-h-screen bg-neutral-50">      
       <main className="mx-auto px-12 sm:px-6 lg:px-8 py-8 sm:py-6 lg:py-8">
         {/* Stats Section - Moved to top */}
         <div className="mb-6">
