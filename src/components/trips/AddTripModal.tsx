@@ -1,392 +1,190 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { SelectableTripCard } from "./SelectableTripCard";
+import { useSession } from "@clerk/nextjs";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createTrip } from "@/lib/commands/create-trip";
+import { CreateTripDto } from "@/lib/dtos/create-trip.dto";
+import { SAMPLE_TRIPS } from "@/lib/constants/sample-trips";
+import { Search, Check, Wand2, PenLine } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ManualTripForm } from "./ManualTripForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AddTripModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (tripData: {
-    title: string;
-    description: string;
-    startDate: Date;
-    endDate: Date;
-    coverImage: string;
-    cities: Array<{
-      name: string;
-      country: string;
-      latitude: number;
-      longitude: number;
-      places?: Array<{
-        name: string;
-        description: string;
-        image?: string;
-      }>;
-    }>;
-    tags?: string[];
-  }) => void;
 }
 
-export function AddTripModal({ isOpen, onClose, onAdd }: AddTripModalProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [coverImage, setCoverImage] = useState("");
-  const [cities, setCities] = useState<Array<{
-    name: string;
-    country: string;
-    latitude: number;
-    longitude: number;
-    places: Array<{
-      name: string;
-      description: string;
-      image?: string;
-    }>;
-  }>>([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
+type CreationMode = "template" | "manual";
 
-  const handleAddCity = () => {
-    setCities([
-      ...cities,
-      {
-        name: "",
-        country: "",
-        latitude: 0,
-        longitude: 0,
-        places: [],
-      },
-    ]);
-  };
+export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
+  const [selectedTemplates, setSelectedTemplates] = useState<CreateTripDto[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mode, setMode] = useState<CreationMode>("template");
+  const { session } = useSession();
+  const queryClient = useQueryClient();
 
-  const handleAddPlace = (cityIndex: number) => {
-    const updatedCities = [...cities];
-    updatedCities[cityIndex].places.push({
-      name: "",
-      description: "",
-    });
-    setCities(updatedCities);
-  };
+  // Filter templates based on search query
+  const filteredTemplates = useMemo(() => {
+    return SAMPLE_TRIPS.filter(template => 
+      template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.trip_tags.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      template.trip_cities.some(city => 
+        city.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        city.country.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [searchQuery]);
 
-  const handleAddTag = () => {
-    if (newTag && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
-      setNewTag("");
+  const { mutate: createTripsMutation, isPending } = useMutation({
+    mutationFn: async (data: CreateTripDto[]) => {
+      if (!session) throw new Error("No session");
+      const token = await session.getToken();
+      if (!token) throw new Error("No token");
+      
+      const results = [];
+      for (const trip of data) {
+        const result = await createTrip(token, trip);
+        results.push(result);
+      }
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trips"] });
+      alert(`${selectedTemplates.length} trips created successfully!`);
+      onClose();
+      setSelectedTemplates([]);
+    },
+    onError: (error) => {
+      alert(error.message || "Failed to create trips");
     }
+  });
+
+  const getTripDuration = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    return `${days} days`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!startDate || !endDate) return;
-
-    onAdd({
-      title,
-      description,
-      startDate,
-      endDate,
-      coverImage,
-      cities,
-      tags,
+  const toggleTemplateSelection = (template: CreateTripDto) => {
+    setSelectedTemplates(prev => {
+      const isSelected = prev.some(t => t === template);
+      if (isSelected) {
+        return prev.filter(t => t !== template);
+      } else {
+        return [...prev, template];
+      }
     });
+  };
 
-    // Reset form
-    setTitle("");
-    setDescription("");
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setCoverImage("");
-    setCities([]);
-    setTags([]);
+  const handleManualSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["trips"] });
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl w-full max-h-[100vh]">
         <DialogHeader>
-          <DialogTitle>Add New Trip</DialogTitle>
+          <DialogTitle>Create New Trip</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
+        <Tabs 
+          defaultValue="template" 
+          value={mode} 
+          onValueChange={(value) => setMode(value as CreationMode)}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="template" className="flex items-center gap-2">
+              <Wand2 className="h-4 w-4" />
+              <span>From Template</span>
+            </TabsTrigger>
+            <TabsTrigger value="manual" className="flex items-center gap-2">
+              <PenLine className="h-4 w-4" />
+              <span>Manual Creation</span>
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Start Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+          <TabsContent value="template" className="space-y-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    disabled={(date) =>
-                      startDate ? date < startDate : false
-                    }
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="flex items-center justify-between px-4">
+              <div className="text-sm text-muted-foreground">
+                {selectedTemplates.length} trips selected
+              </div>
+              {selectedTemplates.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedTemplates([])}
+                >
+                  Clear selection
+                </Button>
+              )}
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="coverImage">Cover Image URL</Label>
-            <Input
-              id="coverImage"
-              value={coverImage}
-              onChange={(e) => setCoverImage(e.target.value)}
-              required
-            />
-          </div>
+            <ScrollArea className="h-[calc(90vh-200px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                {filteredTemplates.map((template, index) => {
+                  const isSelected = selectedTemplates.includes(template);
+                  return (
+                    <div key={index} className="relative group">
+                      <SelectableTripCard
+                        title={template.title}
+                        description={template.description}
+                        image={template.cover_image}
+                        isSelected={isSelected}
+                        onClick={() => toggleTemplateSelection(template)}
+                      />
+                      <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+                        {getTripDuration(template.start_date, template.end_date)}
+                      </div>
+                      <div className="absolute top-4 left-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+                        {template.trip_cities.length} cities
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Cities</Label>
+            <div className="flex justify-end space-x-4 p-4 bg-muted/50 rounded-b-lg">
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={handleAddCity}
+                onClick={onClose}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add City
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={selectedTemplates.length === 0 || isPending}
+                onClick={() => createTripsMutation(selectedTemplates)}
+              >
+                {isPending ? "Creating..." : `Create ${selectedTemplates.length} Trip${selectedTemplates.length === 1 ? '' : 's'}`}
               </Button>
             </div>
+          </TabsContent>
 
-            {cities.map((city, cityIndex) => (
-              <div key={cityIndex} className="space-y-4 p-4 border rounded-lg">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>City Name</Label>
-                    <Input
-                      value={city.name}
-                      onChange={(e) => {
-                        const updatedCities = [...cities];
-                        updatedCities[cityIndex].name = e.target.value;
-                        setCities(updatedCities);
-                      }}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Country</Label>
-                    <Input
-                      value={city.country}
-                      onChange={(e) => {
-                        const updatedCities = [...cities];
-                        updatedCities[cityIndex].country = e.target.value;
-                        setCities(updatedCities);
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Latitude</Label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={city.latitude}
-                      onChange={(e) => {
-                        const updatedCities = [...cities];
-                        updatedCities[cityIndex].latitude = parseFloat(
-                          e.target.value
-                        );
-                        setCities(updatedCities);
-                      }}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Longitude</Label>
-                    <Input
-                      type="number"
-                      step="any"
-                      value={city.longitude}
-                      onChange={(e) => {
-                        const updatedCities = [...cities];
-                        updatedCities[cityIndex].longitude = parseFloat(
-                          e.target.value
-                        );
-                        setCities(updatedCities);
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Places</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAddPlace(cityIndex)}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Place
-                    </Button>
-                  </div>
-
-                  {city.places.map((place, placeIndex) => (
-                    <div
-                      key={placeIndex}
-                      className="space-y-4 p-4 border rounded-lg bg-muted/50"
-                    >
-                      <div className="space-y-2">
-                        <Label>Place Name</Label>
-                        <Input
-                          value={place.name}
-                          onChange={(e) => {
-                            const updatedCities = [...cities];
-                            updatedCities[cityIndex].places[placeIndex].name =
-                              e.target.value;
-                            setCities(updatedCities);
-                          }}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Description</Label>
-                        <Textarea
-                          value={place.description}
-                          onChange={(e) => {
-                            const updatedCities = [...cities];
-                            updatedCities[cityIndex].places[
-                              placeIndex
-                            ].description = e.target.value;
-                            setCities(updatedCities);
-                          }}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Image URL (optional)</Label>
-                        <Input
-                          value={place.image || ""}
-                          onChange={(e) => {
-                            const updatedCities = [...cities];
-                            updatedCities[cityIndex].places[placeIndex].image =
-                              e.target.value;
-                            setCities(updatedCities);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Tags</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Add a tag"
-                  className="w-[200px]"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddTag}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Tag
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag, index) => (
-                <div
-                  key={index}
-                  className="px-2 py-1 bg-primary/10 rounded-full text-sm"
-                >
-                  {tag}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">Add Trip</Button>
-          </div>
-        </form>
+          <TabsContent value="manual">
+            <ScrollArea className="h-[calc(90vh-200px)]">
+              <ManualTripForm onSuccess={handleManualSuccess} onCancel={onClose} />
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
