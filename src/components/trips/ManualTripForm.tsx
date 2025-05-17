@@ -35,10 +35,6 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
   const [description, setDescription] = useState("");
   const [cities, setCities] = useState<(CreateTripCityDto & { trip_places: CreateTripPlaceDto[] })[]>([]);
   const [tags, setTags] = useState<CreateTripTagDto[]>([]);
-  const [newCityName, setNewCityName] = useState("");
-  const [newCityCountry, setNewCityCountry] = useState("");
-  const [newCityLat, setNewCityLat] = useState("");
-  const [newCityLng, setNewCityLng] = useState("");
   const [newPlaceName, setNewPlaceName] = useState("");
   const [newTagName, setNewTagName] = useState("");
   const [selectedCityIndex, setSelectedCityIndex] = useState<number | null>(null);
@@ -49,7 +45,6 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
     libraries,
   });
   
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const placeAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
@@ -165,43 +160,6 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
     createTripMutation(tripData);
   };
 
-  const onPlaceSelected = () => {
-    if (autocompleteRef.current) {
-      const place = autocompleteRef.current.getPlace();
-      if (!place.geometry || !place.geometry.location) {
-        console.log("No place selected or missing geometry");
-        return;
-      }
-
-      const addressComponents = place.address_components || [];
-      const countryComponent = addressComponents.find(
-        (component) => component.types.includes("country")
-      );
-      const cityComponent = addressComponents.find(
-        (component) => component.types.includes("locality")
-      );
-
-      if (!cityComponent || !countryComponent) {
-        console.log("Missing city or country component");
-        return;
-      }
-
-      const newCity: CreateTripCityDto & { trip_places: CreateTripPlaceDto[] } = {
-        name: cityComponent.long_name,
-        country: countryComponent.long_name,
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        trip_places: [],
-      };
-
-      setCities([...cities, newCity]);
-      setNewCityName("");
-      setNewCityCountry("");
-      setNewCityLat("");
-      setNewCityLng("");
-    }
-  };
-
   const onTripPlaceSelected = (cityIndex: number) => {
     if (placeAutocompleteRef.current) {
       const place = placeAutocompleteRef.current.getPlace();
@@ -217,7 +175,6 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
     }
   };
 
- 
   const addPlace = (cityIndex: number) => {
     if (!newPlaceName) {
       alert("Please enter a place name");

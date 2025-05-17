@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, MapPin,  Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
 import { useSession } from "@clerk/nextjs";
 import { Footer } from "@/components/Footer";
+import { getCountryContinent } from "@/utils";
 
 export default function TripsPage() {
   const [selectedTrip, setSelectedTrip] = useState<TripAdapter | null>(null);
@@ -94,29 +95,6 @@ export default function TripsPage() {
       mostVisitedCountry
     };
   }, [trips]);
-
-  const handleAddTrip = async (tripData: {
-    title: string;
-    description: string;
-    start_date: Date;
-    end_date: Date;
-    cover_image: string;
-    trip_cities: Array<{
-      name: string;
-      country: string;
-      latitude: number;
-      longitude: number;
-      trip_places?: Array<{
-        name: string;
-        description: string;
-        image?: string;
-      }>;
-    }>;
-    trip_tags?: string[];
-  }) => {
-    // TODO: Implement trip creation with Supabase
-    console.log("Adding new trip:", tripData);
-  };
 
   if (isLoading) {
     return (
@@ -296,49 +274,4 @@ export default function TripsPage() {
       <Footer />
     </div>
   );
-}
-
-// Helper function to get continent for a country
-function getCountryContinent(country: string): string {
-  const countryToContinent: { [key: string]: string } = {
-    // North America
-    "United States": "North America",
-    "Canada": "North America",
-    "Mexico": "North America",
-    // South America
-    "Brazil": "South America",
-    "Argentina": "South America",
-    "Chile": "South America",
-    "Peru": "South America",
-    "Colombia": "South America",
-    "Ecuador": "South America",
-    "Bolivia": "South America",
-    "Uruguay": "South America",
-    "Paraguay": "South America",
-    "Venezuela": "South America",
-    "Guyana": "South America",
-    "Suriname": "South America",
-    "French Guiana": "South America",
-    // Europe
-    "United Kingdom": "Europe",
-    "France": "Europe",
-    "Germany": "Europe",
-    "Italy": "Europe",
-    "Spain": "Europe",
-    "Portugal": "Europe",
-    "Netherlands": "Europe",
-    "Belgium": "Europe",
-    "Switzerland": "Europe",
-    "Austria": "Europe",
-    "Sweden": "Europe",
-    "Norway": "Europe",
-    "Denmark": "Europe",
-    "Finland": "Europe",
-    "Poland": "Europe",
-    "Greece": "Europe",
-    "Turkey": "Europe",
-    // Add more countries as needed
-  };
-
-  return countryToContinent[country] || "Other";
 } 

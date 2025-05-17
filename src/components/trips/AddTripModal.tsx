@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createTrip } from "@/lib/commands/create-trip";
 import { CreateTripDto } from "@/lib/dtos/create-trip.dto";
 import { SAMPLE_TRIPS } from "@/lib/constants/sample-trips";
-import { Search, Check, Wand2, PenLine } from "lucide-react";
+import { Search, Wand2, PenLine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ManualTripForm } from "./ManualTripForm";

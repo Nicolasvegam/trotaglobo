@@ -1,18 +1,18 @@
 import { TripAdapter } from "@/lib/adapter/trip.adapter";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { Calendar, MapPin, Tag, Globe, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Globe } from "lucide-react";
 import Image from "next/image";
 import { getCountryFlag } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteTrip } from "@/lib/commands/delete-trip";
 import { useSession } from "@clerk/nextjs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface TripModalProps {
   trip: TripAdapter | null;
@@ -49,7 +49,7 @@ export function TripModal({ trip, isOpen, onClose }: TripModalProps) {
   const isPast = endDate < new Date();
 
   // Get unique countries from trip cities
-  const countries = Array.from(new Set(trip.trip_cities.map(city => city.country)));
+  const countries = Array.from(new Set(trip.trip_cities.map((city: { country: string }) => city.country)));
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this trip? This action cannot be undone.")) {
@@ -83,21 +83,16 @@ export function TripModal({ trip, isOpen, onClose }: TripModalProps) {
           />
         </div>
 
-        {trip.trip_tags && trip.trip_tags.length > 0 && (
-          <div className="mt-4">
-            <div className="flex flex-wrap gap-2">
-              {trip.trip_tags.map((tag) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700"
-                >
-                  <Tag className="h-4 w-4 mr-1" />
-                  {tag.name}
-                </span>
-              ))}
-            </div>
+        <div>
+          <h3 className="font-semibold mb-2">Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {trip.trip_tags?.map((tag: { name: string }) => (
+              <span key={tag.name} className="px-2 py-1 bg-gray-100 rounded-full text-sm">
+                {tag.name}
+              </span>
+            ))}
           </div>
-        )}
+        </div>
 
         <div className="mt-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

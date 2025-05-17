@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import Image from "next/image";
 
 interface SelectableTripCardProps {
   title: string;
@@ -26,10 +27,12 @@ export function SelectableTripCard({
       onClick={onClick}
     >
       <div className="aspect-video relative">
-        <img
+        <Image
           src={image}
           alt={title}
           className="object-cover w-full h-full"
+          width={500}
+          height={500}
         />
         {isSelected && (
           <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
