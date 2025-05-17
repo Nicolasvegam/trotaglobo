@@ -17,7 +17,7 @@ export async function getTrips(token: string): Promise<TripAdapter[]> {
         *
       )
     `)
-    .order("created_at", { ascending: false });
+    .order("start_date", { ascending: false });
 
   if (error) {
     throw new Error(error.message);
