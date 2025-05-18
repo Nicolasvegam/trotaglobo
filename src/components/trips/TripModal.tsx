@@ -55,7 +55,7 @@ export function TripModal({ trip, isOpen, onClose }: TripModalProps) {
   return (
     <ResponsiveModal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={onClose}      
       title={trip.title}
     >
       <div className="space-y-1">

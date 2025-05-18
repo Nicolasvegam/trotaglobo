@@ -91,7 +91,7 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Create New Trip"
-      className="lg:max-w-screen-lg overflow-y-auto max-h-[90vh] sm:max-h-[85vh]"
+      className="lg:max-w-screen-lg overflow-y-auto max-h-[90vh] sm:max-h-[85vh] px-4"
     >
       <Tabs 
         defaultValue="template" 

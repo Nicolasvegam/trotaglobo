@@ -11,6 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
 
 interface ResponsiveModalProps {
   isOpen: boolean;
@@ -46,13 +47,15 @@ export function ResponsiveModal({
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DrawerContent className={className}>
+      <DrawerContent className={cn("h-[90vh] flex flex-col", className)}>
         {title && (
-          <DrawerHeader>
+          <DrawerHeader className="flex-none">
             <DrawerTitle>{title}</DrawerTitle>
           </DrawerHeader>
         )}
-        {children}
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
       </DrawerContent>
     </Drawer>
   );

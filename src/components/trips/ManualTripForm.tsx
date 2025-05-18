@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, X, MapPin } from "lucide-react";
+import { Plus, X, MapPin, ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UnsplashImageSearch } from "@/components/ui/unsplash-image-search";
+import Image from "next/image";
 
 interface ManualTripFormProps {
   onSuccess: () => void;
@@ -35,6 +37,9 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
   const [newTagName, setNewTagName] = useState("");
   const [selectedCityIndex, setSelectedCityIndex] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState("");
+  const [showUnsplashSearch, setShowUnsplashSearch] = useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [coverImageSource, setCoverImageSource] = useState<'url' | 'unsplash'>('unsplash');
   
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
@@ -196,30 +201,110 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
     setTags(tags.filter((_, i) => i !== index));
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">Trip Title</Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter trip title"
-            required
-            className="w-full"
-          />
-        </div>
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (coverImageUrl) {
+      setCoverImage(coverImageUrl);
+    }
+  };
 
-        <div className="space-y-2">
-          <Label htmlFor="coverImage">Cover Image URL</Label>
-          <Input
-            id="coverImage"
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            placeholder="Enter image URL (optional)"
-            className="w-full"
-          />
+  if (showUnsplashSearch) {
+    return (
+      <div className="space-y-4">
+        <UnsplashImageSearch
+          onSelect={(imageUrl) => {
+            setCoverImage(imageUrl);
+            setShowUnsplashSearch(false);
+          }}
+          onClose={() => setShowUnsplashSearch(false)}
+        />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowUnsplashSearch(false)}
+            className="flex items-center gap-2 w-full"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to form
+          </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="title">Trip Title</Label>
+        <Input
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter trip title"
+          required
+          className="w-full"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="coverImage">Cover Image</Label>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={coverImageSource === 'unsplash' ? 'default' : 'outline'}
+              onClick={() => {
+                setShowUnsplashSearch(true);
+                setCoverImageSource('unsplash');
+              }}
+              className="flex-1"
+            >
+              Unsplash
+            </Button>
+            <Button
+              type="button"
+              variant={coverImageSource === 'url' ? 'default' : 'outline'}
+              onClick={() => setCoverImageSource('url')}
+              className="flex-1"
+            >
+              Image URL
+            </Button>
+          </div>
+
+          {coverImageSource === 'url' ? (
+            <form onSubmit={handleUrlSubmit} className="flex gap-2">
+              <Input
+                type="url"
+                placeholder="Enter image URL"
+                value={coverImageUrl}
+                onChange={(e) => setCoverImageUrl(e.target.value)}
+                className="flex-1"
+              />
+              <Button type="submit" variant="outline">Add URL</Button>
+            </form>
+          ) : null}
+
+          {coverImage && (
+            <div className="relative aspect-video rounded-md overflow-hidden border">
+              <Image
+                src={coverImage}
+                alt="Cover image"
+                fill
+                className="object-cover"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCoverImage("");
+                  setCoverImageUrl("");
+                }}
+                className="absolute top-2 right-2 h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -231,11 +316,11 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter trip description"
           required
-          className="min-h-[100px] sm:min-h-[120px]"
+          className="min-h-[120px]"
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="startDate">Start Date</Label>
           <Input
@@ -248,7 +333,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                 setEndDate(e.target.value);
               }
             }}
-            className="w-full h-10 sm:h-11"
+            className="w-full h-11"
             required
           />
         </div>
@@ -261,14 +346,14 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             min={startDate}
-            className="w-full h-10 sm:h-11"
+            className="w-full h-11"
             required
           />
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Label>Cities</Label>
           <div className="w-full sm:w-auto">
             {isLoaded ? (
@@ -278,14 +363,14 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                   value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search for a city"
-                  className="w-full h-10 sm:h-11"
+                  className="w-full h-11"
                 />
                 {predictions.length > 0 && (
                   <div className="absolute w-full mt-1 bg-background border rounded-md shadow-lg z-50 max-h-[200px] overflow-y-auto">
                     {predictions.map((prediction) => (
                       <button
                         key={prediction.place_id}
-                        className="w-full px-4 py-3 text-left hover:bg-muted cursor-pointer text-sm sm:text-base"
+                        className="w-full px-3 py-2 text-left hover:bg-muted cursor-pointer text-sm"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -304,15 +389,15 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
           </div>
         </div>
 
-        <ScrollArea className="h-[250px] sm:h-[200px] rounded-md border p-2 sm:p-4">
-          <div className="space-y-4">
+        <ScrollArea className="h-[200px] rounded-md border p-3">
+          <div className="space-y-3">
             {cities.map((city, cityIndex) => (
               <div key={cityIndex} className="space-y-2">
                 <div className="flex items-center justify-between bg-muted p-2 rounded-md">
                   <div className="flex items-center gap-2 flex-wrap">
                     <MapPin className="h-4 w-4 flex-shrink-0" />
-                    <span className="font-medium text-sm sm:text-base">{city.name}</span>
-                    <span className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="font-medium">{city.name}</span>
+                    <span className="text-sm text-muted-foreground">
                       ({city.country})
                     </span>
                   </div>
@@ -321,13 +406,13 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => removeCity(cityIndex)}
-                    className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                    className="h-8 w-8 p-0"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
 
-                <div className="ml-4 sm:ml-6 space-y-2">
+                <div className="ml-4 space-y-2">
                   <div className="flex gap-2">
                     <Input
                       placeholder="Add a place"
@@ -336,13 +421,13 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                         setNewPlaceName(e.target.value);
                         setSelectedCityIndex(cityIndex);
                       }}
-                      className="flex-1 sm:w-60 h-9 sm:h-10"
+                      className="flex-1 sm:w-60 h-10"
                     />
                     <Button
                       type="button"
                       size="sm"
                       onClick={() => onTripPlaceSelected(cityIndex)}
-                      className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+                      className="h-10 w-10 p-0"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -353,13 +438,13 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                       key={placeIndex}
                       className="flex items-center justify-between bg-muted/50 p-2 rounded-md"
                     >
-                      <span className="text-sm sm:text-base truncate mr-2">{place.name}</span>
+                      <span className="text-sm truncate mr-2">{place.name}</span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removePlace(cityIndex, placeIndex)}
-                        className="h-8 w-8 p-0 sm:h-9 sm:w-9 flex-shrink-0"
+                        className="h-8 w-8 p-0 flex-shrink-0"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -372,21 +457,21 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
         </ScrollArea>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Label>Tags</Label>
           <div className="flex gap-2 w-full sm:w-auto">
             <Input
               placeholder="Add a tag"
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
-              className="flex-1 sm:w-40 h-9 sm:h-10"
+              className="flex-1 sm:w-40 h-10"
             />
             <Button 
               type="button" 
               onClick={addTag} 
               size="sm"
-              className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+              className="h-10 w-10 p-0"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -399,34 +484,34 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
               key={index}
               className="flex items-center gap-1 bg-muted px-3 py-1.5 rounded-full"
             >
-              <span className="text-sm sm:text-base">{tag.name}</span>
+              <span className="text-sm">{tag.name}</span>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => removeTag(index)}
-                className="h-6 w-6 p-0 sm:h-7 sm:w-7"
+                className="h-6 w-6 p-0"
               >
-                <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                <X className="h-3 w-3" />
               </Button>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
         <Button 
           type="button" 
           variant="outline" 
           onClick={onCancel}
-          className="w-full sm:w-auto h-10 sm:h-11"
+          className="w-full sm:w-auto h-11"
         >
           Cancel
         </Button>
         <Button 
           type="submit" 
           disabled={isPending}
-          className="w-full sm:w-auto h-10 sm:h-11"
+          className="w-full sm:w-auto h-11"
         >
           {isPending ? "Creating..." : "Create Trip"}
         </Button>

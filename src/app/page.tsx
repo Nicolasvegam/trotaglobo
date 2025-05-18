@@ -1,64 +1,127 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getTrips } from "@/lib/queries/get-trips";
+import { TripAdapter } from "@/lib/adapter/trip.adapter";
+import { TripCard } from "@/components/trips/TripCard";
+import { TripModal } from "@/components/trips/TripModal";
+import { AddTripModal } from "@/components/trips/AddTripModal";
+import { TripCountryFilter } from "@/components/trips/TripCountryFilter";
+import { TripContinentFilter } from "@/components/trips/TripContinentFilter";
+import { TripMap } from "@/components/trips/TripMap";
 import { Button } from "@/components/ui/button";
-import { HolidayMap } from "@/components/HolidayMap";
-import { HolidayCard } from "@/components/HolidayCard";
-import { HolidayModal } from "@/components/HolidayModal";
-import { AddHolidayModal } from "@/components/AddHolidayModal";
-import { CountryFilter } from "@/components/CountryFilter";
-import { ContinentFilter } from "@/components/ContinentFilter";
-import { Holiday } from "@/types/holiday";
-import { Plus, MapPin, Calendar,  Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SAMPLE_HOLIDAYS } from "@/lib/constants";
-import { calculateTravelStats, getCountryContinent } from "@/utils";
+import { Plus, MapPin,  Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
+import { useSession } from "@clerk/nextjs";
+import { Footer } from "@/components/Footer";
+import { getCountryContinent } from "@/utils";
 
-export default function Home() {
-  const [holidays, setHolidays] = useState<Holiday[]>(
-    // Sort holidays by date (most recent first)
-    [...SAMPLE_HOLIDAYS].sort((a, b) => b.startDate.getTime() - a.startDate.getTime())
-  );
-  const [selectedHoliday, setSelectedHoliday] = useState<Holiday | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function TripsPage() {
+  const [selectedTrip, setSelectedTrip] = useState<TripAdapter | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'past' | 'wishlist'>('past');
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
+  const { session } = useSession();
+  const { data: trips, isLoading, error } = useQuery({
+    queryKey: ["trips"],
+    queryFn: async () => {
+        if (!session) return [];
+        const token = await session.getToken();
+        if (!token) return [];
+        const trips = await getTrips(token, session.user.id);
+        return trips;
+    },
+    enabled: !!session
+  });
 
-  const handleHolidayClick = (holiday: Holiday) => {
-    setSelectedHoliday(holiday);
-    setIsModalOpen(true);
-  };
+  const filteredTrips = useMemo(() => {
+    if (!trips) return [];
+    return trips.filter((trip) => {
+      if (selectedCountry) {
+        const hasCountry = trip.trip_cities.some(
+          (city) => city.country === selectedCountry
+        );
+        if (!hasCountry) return false;
+      }
 
-  const handleAddHoliday = (newHoliday: Holiday) => {
-    setHolidays([...holidays, newHoliday]);
-  };
+      if (selectedContinent) {
+        const hasContinent = trip.trip_cities.some((city) => {
+          const continent = getCountryContinent(city.country);
+          return continent === selectedContinent;
+        });
+        if (!hasContinent) return false;
+      }
 
-  const filteredHolidays = useMemo(() => {
-    return holidays.filter(holiday => {
-      const countryMatch = !selectedCountry || holiday.countries.includes(selectedCountry);
-      const continentMatch = !selectedContinent || 
-        holiday.countries.some(country => getCountryContinent(country) === selectedContinent);
-      return countryMatch && continentMatch;
+      return true;
     });
-  }, [holidays, selectedCountry, selectedContinent]);
+  }, [trips, selectedCountry, selectedContinent]);
 
-  const pastHolidays = filteredHolidays.filter(holiday => holiday.isPast);
-  const wishlistHolidays = filteredHolidays.filter(holiday => !holiday.isPast);
+  // Calculate travel stats
+  const travelStats = useMemo(() => {
+    if (!trips) return {
+      totalCountries: 0,
+      totalCities: 0,
+      longestTrip: '0 days',
+      mostVisitedCountry: 'N/A'
+    };
 
-  // Get the currently visible holidays based on tab and country filter
-  const visibleHolidays = useMemo(() => {
-    return activeTab === 'past' ? pastHolidays : wishlistHolidays;
-  }, [activeTab, pastHolidays, wishlistHolidays]);
+    const pastTrips = trips.filter(trip => new Date(trip.end_date) < new Date());
+    const countries = new Set(pastTrips.flatMap(trip => trip.trip_cities.map(city => city.country)));
+    const cities = new Set(pastTrips.flatMap(trip => trip.trip_cities.map(city => city.name)));
+    
+    // Calculate longest trip
+    const longestTrip = pastTrips.reduce((longest, trip) => {
+      const start = new Date(trip.start_date);
+      const end = new Date(trip.end_date);
+      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      return days > longest ? days : longest;
+    }, 0);
 
-  const travelStats = useMemo(() => calculateTravelStats(pastHolidays), [pastHolidays]);
+    // Calculate most visited country
+    const countryCounts = pastTrips.flatMap(trip => trip.trip_cities.map(city => city.country))
+      .reduce((acc, country) => {
+        acc[country] = (acc[country] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+    const mostVisitedCountry = Object.entries(countryCounts)
+      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
+
+    return {
+      totalCountries: countries.size,
+      totalCities: cities.size,
+      longestTrip: `${longestTrip} days`,
+      mostVisitedCountry
+    };
+  }, [trips]);
+
+  if (isLoading) {
+    return (
+      <div className="container py-8">
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-8">
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="text-destructive">
+            Error loading trips. Please try again later.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-neutral-50">      
+    <div className="min-h-screen bg-neutral-50">
       <main className="mx-auto px-12 sm:px-6 lg:px-8 py-8 sm:py-6 lg:py-8">
-        {/* Stats Section - Moved to top */}
+        {/* Stats Section */}
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-neutral-800 mb-6">Your Travel Stats</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -113,62 +176,38 @@ export default function Home() {
                 <div>
                   <h2 className="text-xl font-semibold text-neutral-900">Your Travel Map</h2>
                   <p className="text-neutral-500 text-sm mt-1">
-                    {activeTab === 'past' ? 'Visualize your past adventures' : 'Preview your future destinations'}
+                    Visualize your past and future adventures
                   </p>
                 </div>
               </div>
               <div className="h-[400px] lg:h-[600px]">
-                <HolidayMap 
-                  holidays={visibleHolidays} 
-                  onHolidayClick={handleHolidayClick} 
-                />
+                {filteredTrips.length > 0 && <TripMap 
+                  trips={filteredTrips} 
+                  onTripClick={setSelectedTrip} 
+                />}
               </div>
             </div>
           </div>
 
-          {/* Left side - Cards and Filters */}
+          {/* Right side - Cards and Filters */}
           <div className="flex-1 min-w-0">
             <div className="flex flex-col mb-8">
-              <div className="flex border-b border-neutral-200">
-                <button
-                  className={`py-4 px-6 font-medium text-sm relative transition-colors duration-200 ${
-                    activeTab === 'past' 
-                      ? 'text-neutral-900 border-b-2 border-brand-primary' 
-                      : 'text-neutral-500 hover:text-neutral-700'
-                  }`}
-                  onClick={() => setActiveTab('past')}
-                >
-                  Past Trips
-                  {pastHolidays.length > 0 && (
-                    <span className="ml-2 bg-neutral-100 text-neutral-600 px-2.5 py-1 rounded-full text-xs">
-                      {pastHolidays.length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  className={`py-4 px-6 font-medium text-sm relative transition-colors duration-200 ${
-                    activeTab === 'wishlist' 
-                      ? 'text-neutral-900 border-b-2 border-brand-primary' 
-                      : 'text-neutral-500 hover:text-neutral-700'
-                  }`}
-                  onClick={() => setActiveTab('wishlist')}
-                >
-                  Wishlist
-                  {wishlistHolidays.length > 0 && (
-                    <span className="ml-2 bg-neutral-100 text-neutral-600 px-2.5 py-1 rounded-full text-xs">
-                      {wishlistHolidays.length}
-                    </span>
-                  )}
-                </button>
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-semibold text-neutral-900">My Trips</h1>
+                <Button onClick={() => setIsAddModalOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Trip
+                </Button>
               </div>
+
               <div className="mt-4 space-y-2">
-                <ContinentFilter
-                  displayedHolidays={visibleHolidays}
+                <TripContinentFilter
+                  displayedTrips={filteredTrips}
                   selectedContinent={selectedContinent}
                   onContinentSelect={setSelectedContinent}
                 />
-                <CountryFilter
-                  displayedHolidays={visibleHolidays}
+                <TripCountryFilter
+                  displayedTrips={filteredTrips}
                   selectedCountry={selectedCountry}
                   onCountrySelect={setSelectedCountry}
                 />
@@ -176,37 +215,31 @@ export default function Home() {
             </div>
 
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleHolidays.map(holiday => (
-                <HolidayCard
-                  key={holiday.id}
-                  holiday={holiday}
-                  onClick={handleHolidayClick}
+              {filteredTrips.map((trip) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  onClick={setSelectedTrip}
                 />
               ))}
               
-              {visibleHolidays.length === 0 && (
+              {filteredTrips.length === 0 && (
                 <div className="col-span-full py-16 flex flex-col items-center justify-center text-center">
                   <div className="bg-neutral-100 rounded-full p-5 mb-6">
-                    {activeTab === 'past' ? (
-                      <MapPin className="h-8 w-8 text-neutral-400" />
-                    ) : (
-                      <Calendar className="h-8 w-8 text-neutral-400" />
-                    )}
+                    <MapPin className="h-8 w-8 text-neutral-400" />
                   </div>
                   <h3 className="text-xl font-medium text-neutral-800 mb-3">
-                    {activeTab === 'past' ? 'No past trips yet' : 'Your wishlist is empty'}
+                    No trips yet
                   </h3>
                   <p className="text-neutral-500 max-w-md mb-8 text-lg">
-                    {activeTab === 'past' 
-                      ? 'Start adding your travel memories to build your personal travel map.' 
-                      : 'Add destinations you dream of visiting to your wishlist.'}
+                    Start adding your travel memories to build your personal travel map.
                   </p>
                   <Button 
                     onClick={() => setIsAddModalOpen(true)}
                     className="px-6 py-2.5 text-base"
                   >
                     <Plus className="h-5 w-5 mr-2" />
-                    <span>{activeTab === 'past' ? 'Add Past Trip' : 'Add to Wishlist'}</span>
+                    <span>Add Trip</span>
                   </Button>
                 </div>
               )}
@@ -216,7 +249,7 @@ export default function Home() {
 
         <div className="fixed bottom-8 right-8 z-10">
           <Button 
-            className="rounded-full h-16 w-16 shadow-lg hover:shadow-xl transition-all duration-200" 
+            className="rounded-full h-16 w-16 shadow-lg hover:shadow-xl transition-all duration-200 bg-black text-white" 
             size="icon"
             onClick={() => setIsAddModalOpen(true)}
           >
@@ -225,20 +258,20 @@ export default function Home() {
         </div>
       </main>
 
-      <HolidayModal 
-        holiday={selectedHoliday} 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      />
+      {selectedTrip && (
+        <TripModal
+          trip={selectedTrip}
+          isOpen={!!selectedTrip}
+          onClose={() => setSelectedTrip(null)}
+        />
+      )}
 
-      <AddHolidayModal
+      <AddTripModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddHoliday}
-        isPast={activeTab === 'past'}
       />
 
       <Footer />
     </div>
   );
-}
+} 
