@@ -11,11 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Plus, X, MapPin } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Plus, X, MapPin } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ManualTripFormProps {
@@ -28,8 +24,8 @@ const libraries: ("places")[] = ["places"];
 export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
   const { session } = useSession();
   const queryClient = useQueryClient();
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [coverImage, setCoverImage] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -39,8 +35,6 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
   const [newTagName, setNewTagName] = useState("");
   const [selectedCityIndex, setSelectedCityIndex] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState("");
-  const [isCalendarStartOpen, setIsCalendarStartOpen] = useState(false);
-  const [isCalendarEndOpen, setIsCalendarEndOpen] = useState(false);
   
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
@@ -151,8 +145,8 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
     const tripData: CreateTripDto = {
       title,
       description,
-      start_date: startDate.toISOString(),
-      end_date: endDate.toISOString(),
+      start_date: new Date(startDate).toISOString(),
+      end_date: new Date(endDate).toISOString(),
       cover_image: coverImage || "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
       trip_cities: cities,
       trip_tags: tags,
@@ -243,56 +237,33 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div className="space-y-2">
-          <Label>Start Date</Label>
-          <Popover open={isCalendarStartOpen}>
-            <PopoverTrigger asChild onClick={() => setIsCalendarStartOpen(!isCalendarStartOpen)}>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal h-10 sm:h-11",
-                  !startDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {startDate ? format(startDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={startDate}
-                onSelect={setStartDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          <Label htmlFor="startDate">Start Date</Label>
+          <Input
+            id="startDate"
+            type="date"
+            value={startDate}
+            onChange={(e) => {
+              setStartDate(e.target.value);
+              if (endDate && e.target.value > endDate) {
+                setEndDate(e.target.value);
+              }
+            }}
+            className="w-full h-10 sm:h-11"
+            required
+          />
         </div>
 
-        <div className="space-y-2" >
-          <Label>End Date</Label>
-          <Popover open={isCalendarEndOpen}>
-            <PopoverTrigger asChild onClick={() => setIsCalendarEndOpen(!isCalendarEndOpen)}>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal h-10 sm:h-11",
-                  !endDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={endDate}
-                onSelect={setEndDate}
-                initialFocus
-                disabled={(date) => startDate ? date < startDate : false}
-              />
-            </PopoverContent>
-          </Popover>
+        <div className="space-y-2">
+          <Label htmlFor="endDate">End Date</Label>
+          <Input
+            id="endDate"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            min={startDate}
+            className="w-full h-10 sm:h-11"
+            required
+          />
         </div>
       </div>
 
