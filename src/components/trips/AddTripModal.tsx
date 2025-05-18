@@ -89,35 +89,38 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-full max-h-[100vh]">
-        <DialogHeader>
-          <DialogTitle>Create New Trip</DialogTitle>
+      <DialogContent className="max-w-6xl w-[95vw] sm:w-full max-h-[100vh] p-4 sm:p-6">
+        <DialogHeader className="px-2 sm:px-0">
+          <DialogTitle className="text-xl sm:text-2xl">Create New Trip</DialogTitle>
         </DialogHeader>
 
         <Tabs 
           defaultValue="template" 
           value={mode} 
           onValueChange={(value) => setMode(value as CreationMode)}
+          className="mt-4"
         >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="template" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 h-12 sm:h-10">
+            <TabsTrigger value="template" className="flex items-center gap-2 text-sm sm:text-base">
               <Wand2 className="h-4 w-4" />
-              <span>From Template</span>
+              <span className="hidden sm:inline">From Template</span>
+              <span className="sm:hidden">Template</span>
             </TabsTrigger>
-            <TabsTrigger value="manual" className="flex items-center gap-2">
+            <TabsTrigger value="manual" className="flex items-center gap-2 text-sm sm:text-base">
               <PenLine className="h-4 w-4" />
-              <span>Manual Creation</span>
+              <span className="hidden sm:inline">Manual Creation</span>
+              <span className="sm:hidden">Manual</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="template" className="space-y-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <TabsContent value="template" className="space-y-4 sm:space-y-6 mt-4">
+            <div className="relative px-2 sm:px-0">
+              <Search className="absolute left-5 sm:left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-10 sm:pl-9 h-12 sm:h-10 text-base"
               />
             </div>
 
@@ -130,14 +133,15 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedTemplates([])}
+                  className="h-9 px-3 text-sm"
                 >
                   Clear selection
                 </Button>
               )}
             </div>
 
-            <ScrollArea className="h-[calc(90vh-200px)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+            <ScrollArea className="h-[calc(80vh-280px)] sm:h-[calc(80vh-200px)]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 p-2 sm:p-4">
                 {filteredTemplates.map((template, index) => {
                   const isSelected = selectedTemplates.includes(template);
                   return (
@@ -149,10 +153,10 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
                         isSelected={isSelected}
                         onClick={() => toggleTemplateSelection(template)}
                       />
-                      <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+                      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/60 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
                         {getTripDuration(template.start_date, template.end_date)}
                       </div>
-                      <div className="absolute top-4 left-4 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+                      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 bg-black/60 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm">
                         {template.trip_cities.length} cities
                       </div>
                     </div>
@@ -161,11 +165,12 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
               </div>
             </ScrollArea>
 
-            <div className="flex justify-end space-x-4 p-4 bg-muted/50 rounded-b-lg">
+            <div className="flex justify-end gap-3 sm:space-x-4 p-4 bg-muted/50 rounded-b-lg mt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
+                className="h-12 sm:h-10 px-6 text-base"
               >
                 Cancel
               </Button>
@@ -173,6 +178,7 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
                 type="button"
                 disabled={selectedTemplates.length === 0 || isPending}
                 onClick={() => createTripsMutation(selectedTemplates)}
+                className="h-12 sm:h-10 px-6 text-base"
               >
                 {isPending ? "Creating..." : `Create ${selectedTemplates.length} Trip${selectedTemplates.length === 1 ? '' : 's'}`}
               </Button>
@@ -180,7 +186,7 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
           </TabsContent>
 
           <TabsContent value="manual">
-            <ScrollArea className="h-[calc(90vh-200px)]">
+            <ScrollArea className="h-[calc(90vh-280px)] sm:h-[calc(90vh-200px)]">
               <ManualTripForm onSuccess={handleManualSuccess} onCancel={onClose} />
             </ScrollArea>
           </TabsContent>

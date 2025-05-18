@@ -214,8 +214,8 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div className="space-y-2">
           <Label htmlFor="title">Trip Title</Label>
           <Input
@@ -224,6 +224,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter trip title"
             required
+            className="w-full"
           />
         </div>
 
@@ -234,6 +235,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
             value={coverImage}
             onChange={(e) => setCoverImage(e.target.value)}
             placeholder="Enter image URL (optional)"
+            className="w-full"
           />
         </div>
       </div>
@@ -246,10 +248,11 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter trip description"
           required
+          className="min-h-[100px] sm:min-h-[120px]"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div className="space-y-2">
           <Label>Start Date</Label>
           <Popover>
@@ -257,7 +260,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "w-full justify-start text-left font-normal h-10 sm:h-11",
                   !startDate && "text-muted-foreground"
                 )}
               >
@@ -265,7 +268,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                 {startDate ? format(startDate, "PPP") : "Pick a date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={startDate}
@@ -283,7 +286,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "w-full justify-start text-left font-normal h-10 sm:h-11",
                   !endDate && "text-muted-foreground"
                 )}
               >
@@ -291,7 +294,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                 {endDate ? format(endDate, "PPP") : "Pick a date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={endDate}
@@ -305,24 +308,24 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Label>Cities</Label>
-          <div className="flex gap-2">
+          <div className="w-full sm:w-auto">
             {isLoaded ? (
-              <div className="w-[400px] relative">
+              <div className="w-full sm:w-[400px] relative">
                 <Input
                   ref={searchInputRef}
                   value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search for a city"
-                  className="w-full"
+                  className="w-full h-10 sm:h-11"
                 />
                 {predictions.length > 0 && (
-                  <div className="absolute w-full mt-1 bg-background border rounded-md shadow-lg z-50">
+                  <div className="absolute w-full mt-1 bg-background border rounded-md shadow-lg z-50 max-h-[200px] overflow-y-auto">
                     {predictions.map((prediction) => (
                       <button
                         key={prediction.place_id}
-                        className="w-full px-4 py-2 text-left hover:bg-muted cursor-pointer"
+                        className="w-full px-4 py-3 text-left hover:bg-muted cursor-pointer text-sm sm:text-base"
                         onClick={() => handlePlaceSelect(prediction.place_id)}
                       >
                         {prediction.description}
@@ -337,15 +340,15 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
           </div>
         </div>
 
-        <ScrollArea className="h-[200px] rounded-md border p-4">
+        <ScrollArea className="h-[250px] sm:h-[200px] rounded-md border p-2 sm:p-4">
           <div className="space-y-4">
             {cities.map((city, cityIndex) => (
               <div key={cityIndex} className="space-y-2">
                 <div className="flex items-center justify-between bg-muted p-2 rounded-md">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span className="font-medium">{city.name}</span>
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium text-sm sm:text-base">{city.name}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       ({city.country})
                     </span>
                   </div>
@@ -354,15 +357,16 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => removeCity(cityIndex)}
+                    className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
 
-                <div className="ml-6 space-y-2">
+                <div className="ml-4 sm:ml-6 space-y-2">
                   <div className="flex gap-2">
                     {isLoaded ? (
-                      <div className="w-60">
+                      <div className="flex-1 sm:w-60">
                         <Autocomplete
                           onLoad={(autocomplete) => {
                             placeAutocompleteRef.current = autocomplete;
@@ -377,7 +381,7 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                               setNewPlaceName(e.target.value);
                               setSelectedCityIndex(cityIndex);
                             }}
-                            className="w-full"
+                            className="w-full h-9 sm:h-10"
                           />
                         </Autocomplete>
                       </div>
@@ -389,13 +393,14 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                           setNewPlaceName(e.target.value);
                           setSelectedCityIndex(cityIndex);
                         }}
-                        className="w-60"
+                        className="flex-1 sm:w-60 h-9 sm:h-10"
                       />
                     )}
                     <Button
                       type="button"
                       size="sm"
                       onClick={() => addPlace(cityIndex)}
+                      className="h-9 w-9 sm:h-10 sm:w-10 p-0"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -406,12 +411,13 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                       key={placeIndex}
                       className="flex items-center justify-between bg-muted/50 p-2 rounded-md"
                     >
-                      <span>{place.name}</span>
+                      <span className="text-sm sm:text-base truncate mr-2">{place.name}</span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removePlace(cityIndex, placeIndex)}
+                        className="h-8 w-8 p-0 sm:h-9 sm:w-9 flex-shrink-0"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -425,16 +431,21 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Label>Tags</Label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Input
               placeholder="Add a tag"
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
-              className="w-40"
+              className="flex-1 sm:w-40 h-9 sm:h-10"
             />
-            <Button type="button" onClick={addTag} size="sm">
+            <Button 
+              type="button" 
+              onClick={addTag} 
+              size="sm"
+              className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+            >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -444,28 +455,37 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
           {tags.map((tag, index) => (
             <div
               key={index}
-              className="flex items-center gap-1 bg-muted px-3 py-1 rounded-full"
+              className="flex items-center gap-1 bg-muted px-3 py-1.5 rounded-full"
             >
-              <span>{tag.name}</span>
+              <span className="text-sm sm:text-base">{tag.name}</span>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => removeTag(index)}
-                className="h-4 w-4 p-0"
+                className="h-6 w-6 p-0 sm:h-7 sm:w-7"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 pt-2">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          className="w-full sm:w-auto h-10 sm:h-11"
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isPending}>
+        <Button 
+          type="submit" 
+          disabled={isPending}
+          className="w-full sm:w-auto h-10 sm:h-11"
+        >
           {isPending ? "Creating..." : "Create Trip"}
         </Button>
       </div>
