@@ -65,8 +65,6 @@ export async function createTrip(token: string, tripData: CreateTripDto) {
     city.trip_places.map((place) => ({
       trip_city_id: createdCities[index].id,
       name: place.name.trim(),
-      lat: place.lat,
-      lng: place.lng,
     }))
   );
 
