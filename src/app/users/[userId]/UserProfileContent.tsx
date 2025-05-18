@@ -13,20 +13,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { getCountryContinent } from "@/utils";
+import { ClerkUserAdapter } from "@/lib/adapter/clerk-user.adapter";
+import Image from "next/image";
 
 interface UserProfileContentProps {
-  userId: string;
+  user: ClerkUserAdapter;
 }
 
-export function UserProfileContent({ userId }: UserProfileContentProps) {
+export function UserProfileContent({ user }: UserProfileContentProps) {
   const [selectedTrip, setSelectedTrip] = useState<TripAdapter | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
   
   const { data: trips, isLoading, error } = useQuery({
-    queryKey: ["trips", userId],
+    queryKey: ["trips", user.id],
     queryFn: async () => {
-        const trips = await getTrips(null, userId);
+        const trips = await getTrips(null, user.id);
         return trips;
     },
   });
@@ -119,7 +121,21 @@ export function UserProfileContent({ userId }: UserProfileContentProps) {
       <main className="mx-auto px-12 sm:px-6 lg:px-8 py-8 sm:py-6 lg:py-8">
         {/* Stats Section */}
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-800 mb-6">Travel Stats</h2>
+          <div className="flex items-center gap-4 mb-6">
+            <Image 
+              src={user.image || '/default-avatar.png'}
+              alt={`${user.firstName}'s profile`}
+              width={64}
+              height={64}
+              className="rounded-full object-cover aspect-square"
+            />
+            <div>
+              <h2 className="text-2xl font-semibold text-neutral-800">
+                {user.firstName} {user.lastName}
+              </h2>
+              <p className="text-neutral-600">Travel Stats</p>
+            </div>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card className="p-4 hover:shadow-md transition-shadow duration-200">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">

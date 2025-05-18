@@ -12,10 +12,11 @@ import { TripContinentFilter } from "@/components/trips/TripContinentFilter";
 import { TripMap } from "@/components/trips/TripMap";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, MapPin,  Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
+import { Plus, MapPin,  Globe, Map as MapIcon, CalendarDays, Trophy, User } from "lucide-react";
 import { useSession } from "@clerk/nextjs";
 import { Footer } from "@/components/Footer";
 import { getCountryContinent } from "@/utils";
+import Link from "next/link";
 
 export default function TripsPage() {
   const [selectedTrip, setSelectedTrip] = useState<TripAdapter | null>(null);
@@ -123,7 +124,17 @@ export default function TripsPage() {
       <main className="mx-auto px-12 sm:px-6 lg:px-8 py-8 sm:py-6 lg:py-8">
         {/* Stats Section */}
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-800 mb-6">Your Travel Stats</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-neutral-800">Your Travel Stats</h2>
+            {session?.user?.id && (
+              <Link href={`/users/${session.user.id}`}>
+                <Button variant="outline" className="gap-2">
+                  <User className="h-4 w-4" />
+                  View Profile
+                </Button>
+              </Link>
+            )}
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card className="p-4 hover:shadow-md transition-shadow duration-200">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
