@@ -27,7 +27,6 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
   const { session } = useSession();
   const queryClient = useQueryClient();
 
-  // Filter templates based on search query
   const filteredTemplates = useMemo(() => {
     return SAMPLE_TRIPS.filter(template => 
       template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

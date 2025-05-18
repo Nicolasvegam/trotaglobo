@@ -29,7 +29,7 @@ export default function TripsPage() {
         if (!session) return [];
         const token = await session.getToken();
         if (!token) return [];
-        const trips = await getTrips(token);
+        const trips = await getTrips(token, session.user.id);
         return trips;
     },
     enabled: !!session
