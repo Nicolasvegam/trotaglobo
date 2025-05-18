@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "@clerk/nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLoadScript, Autocomplete } from "@react-google-maps/api";
+import { useLoadScript } from "@react-google-maps/api";
 import { createTrip } from "@/lib/commands/create-trip";
 import { CreateTripDto } from "@/lib/dtos/create-trip.dto";
 import { CreateTripCityDto } from "@/lib/dtos/create-trip-city.dto";
@@ -39,13 +39,14 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
   const [newTagName, setNewTagName] = useState("");
   const [selectedCityIndex, setSelectedCityIndex] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState("");
-
+  const [isCalendarStartOpen, setIsCalendarStartOpen] = useState(false);
+  const [isCalendarEndOpen, setIsCalendarEndOpen] = useState(false);
+  
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries,
   });
   
-  const placeAutocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
@@ -161,30 +162,18 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
   };
 
   const onTripPlaceSelected = (cityIndex: number) => {
-    if (placeAutocompleteRef.current) {
-      const place = placeAutocompleteRef.current.getPlace();
-      if (place.name) {
-        const updatedCities = [...cities];
-        updatedCities[cityIndex].trip_places.push({ 
-          name: place.name,
-        });
-        setCities(updatedCities);
-        setNewPlaceName("");
-        setSelectedCityIndex(null);
-      }
-    }
-  };
-
-  const addPlace = (cityIndex: number) => {
     if (!newPlaceName) {
       alert("Please enter a place name");
       return;
     }
 
     const updatedCities = [...cities];
-    updatedCities[cityIndex].trip_places.push({ name: newPlaceName });
+    updatedCities[cityIndex].trip_places.push({ 
+      name: newPlaceName,
+    });
     setCities(updatedCities);
     setNewPlaceName("");
+    setSelectedCityIndex(null);
   };
 
   const addTag = () => {
@@ -255,8 +244,8 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div className="space-y-2">
           <Label>Start Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
+          <Popover open={isCalendarStartOpen}>
+            <PopoverTrigger asChild onClick={() => setIsCalendarStartOpen(!isCalendarStartOpen)}>
               <Button
                 variant="outline"
                 className={cn(
@@ -279,10 +268,10 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
           </Popover>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2" >
           <Label>End Date</Label>
-          <Popover>
-            <PopoverTrigger asChild>
+          <Popover open={isCalendarEndOpen}>
+            <PopoverTrigger asChild onClick={() => setIsCalendarEndOpen(!isCalendarEndOpen)}>
               <Button
                 variant="outline"
                 className={cn(
@@ -326,7 +315,11 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
                       <button
                         key={prediction.place_id}
                         className="w-full px-4 py-3 text-left hover:bg-muted cursor-pointer text-sm sm:text-base"
-                        onClick={() => handlePlaceSelect(prediction.place_id)}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handlePlaceSelect(prediction.place_id)
+                        }}
                       >
                         {prediction.description}
                       </button>
@@ -365,41 +358,19 @@ export function ManualTripForm({ onSuccess, onCancel }: ManualTripFormProps) {
 
                 <div className="ml-4 sm:ml-6 space-y-2">
                   <div className="flex gap-2">
-                    {isLoaded ? (
-                      <div className="flex-1 sm:w-60">
-                        <Autocomplete
-                          onLoad={(autocomplete) => {
-                            placeAutocompleteRef.current = autocomplete;
-                          }}
-                          onPlaceChanged={() => selectedCityIndex !== null && onTripPlaceSelected(selectedCityIndex)}
-                          types={["establishment"]}
-                        >
-                          <Input
-                            placeholder="Add a place"
-                            value={selectedCityIndex === cityIndex ? newPlaceName : ""}
-                            onChange={(e) => {
-                              setNewPlaceName(e.target.value);
-                              setSelectedCityIndex(cityIndex);
-                            }}
-                            className="w-full h-9 sm:h-10"
-                          />
-                        </Autocomplete>
-                      </div>
-                    ) : (
-                      <Input
-                        placeholder="Add a place"
-                        value={selectedCityIndex === cityIndex ? newPlaceName : ""}
-                        onChange={(e) => {
-                          setNewPlaceName(e.target.value);
-                          setSelectedCityIndex(cityIndex);
-                        }}
-                        className="flex-1 sm:w-60 h-9 sm:h-10"
-                      />
-                    )}
+                    <Input
+                      placeholder="Add a place"
+                      value={selectedCityIndex === cityIndex ? newPlaceName : ""}
+                      onChange={(e) => {
+                        setNewPlaceName(e.target.value);
+                        setSelectedCityIndex(cityIndex);
+                      }}
+                      className="flex-1 sm:w-60 h-9 sm:h-10"
+                    />
                     <Button
                       type="button"
                       size="sm"
-                      onClick={() => addPlace(cityIndex)}
+                      onClick={() => onTripPlaceSelected(cityIndex)}
                       className="h-9 w-9 sm:h-10 sm:w-10 p-0"
                     >
                       <Plus className="h-4 w-4" />

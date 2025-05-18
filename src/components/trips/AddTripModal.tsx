@@ -88,8 +88,8 @@ export function AddTripModal({ isOpen, onClose }: AddTripModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl w-[95vw] sm:w-full max-h-[100vh] p-4 sm:p-6">
-        <DialogHeader className="px-2 sm:px-0">
+        <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
+  <DialogHeader className="px-2 sm:px-0">
           <DialogTitle className="text-xl sm:text-2xl">Create New Trip</DialogTitle>
         </DialogHeader>
 

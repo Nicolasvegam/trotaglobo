@@ -26,13 +26,13 @@ export function SelectableTripCard({
       )}
       onClick={onClick}
     >
-      <div className="aspect-video relative">
+      <div className="aspect-video relative w-full">
         <Image
           src={image}
           alt={title}
-          className="object-cover w-full h-full"
-          width={500}
-          height={500}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         {isSelected && (
           <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">

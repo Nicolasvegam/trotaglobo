@@ -59,8 +59,8 @@ export function TripModal({ trip, isOpen, onClose }: TripModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+  <DialogContent className={"lg:max-w-screen-lg overflow-y-scroll max-h-screen"}>
+  <DialogHeader>
           <div className="space-y-1">
             <DialogTitle className="text-2xl font-bold">{trip.title}</DialogTitle>
             <div className="flex items-center gap-2 text-sm text-neutral-600">
