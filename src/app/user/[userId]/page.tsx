@@ -6,33 +6,25 @@ import { getTrips } from "@/lib/queries/get-trips";
 import { TripAdapter } from "@/lib/adapter/trip.adapter";
 import { TripCard } from "@/components/trips/TripCard";
 import { TripModal } from "@/components/trips/TripModal";
-import { AddTripModal } from "@/components/trips/AddTripModal";
 import { TripCountryFilter } from "@/components/trips/TripCountryFilter";
 import { TripContinentFilter } from "@/components/trips/TripContinentFilter";
 import { TripMap } from "@/components/trips/TripMap";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, MapPin,  Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
-import { useSession } from "@clerk/nextjs";
+import { MapPin, Globe, Map as MapIcon, CalendarDays, Trophy } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { getCountryContinent } from "@/utils";
 
-export default function TripsPage() {
+export default function UserProfilePage({ params }: { params: { userId: string } }) {
   const [selectedTrip, setSelectedTrip] = useState<TripAdapter | null>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
-  const { session } = useSession();
+  
   const { data: trips, isLoading, error } = useQuery({
-    queryKey: ["trips"],
+    queryKey: ["trips", params.userId],
     queryFn: async () => {
-        if (!session) return [];
-        const token = await session.getToken();
-        if (!token) return [];
-        const trips = await getTrips(token, session.user.id);
+        const trips = await getTrips(null, params.userId);
         return trips;
     },
-    enabled: !!session
   });
 
   const filteredTrips = useMemo(() => {
@@ -123,7 +115,7 @@ export default function TripsPage() {
       <main className="mx-auto px-12 sm:px-6 lg:px-8 py-8 sm:py-6 lg:py-8">
         {/* Stats Section */}
         <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-800 mb-6">Your Travel Stats</h2>
+          <h2 className="text-2xl font-semibold text-neutral-800 mb-6">Travel Stats</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card className="p-4 hover:shadow-md transition-shadow duration-200">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
@@ -174,9 +166,9 @@ export default function TripsPage() {
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-neutral-200 hover:shadow-md transition-shadow duration-200">
               <div className="p-6 flex justify-between items-center border-b border-neutral-200">
                 <div>
-                  <h2 className="text-xl font-semibold text-neutral-900">Your Travel Map</h2>
+                  <h2 className="text-xl font-semibold text-neutral-900">Travel Map</h2>
                   <p className="text-neutral-500 text-sm mt-1">
-                    Visualize your past and future adventures
+                    Visualize past and future adventures
                   </p>
                 </div>
               </div>
@@ -193,11 +185,7 @@ export default function TripsPage() {
           <div className="flex-1 min-w-0">
             <div className="flex flex-col mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-semibold text-neutral-900">My Trips</h1>
-                <Button onClick={() => setIsAddModalOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Trip
-                </Button>
+                <h1 className="text-2xl font-semibold text-neutral-900">Trips</h1>
               </div>
 
               <div className="mt-4 space-y-2">
@@ -232,29 +220,12 @@ export default function TripsPage() {
                     No trips yet
                   </h3>
                   <p className="text-neutral-500 max-w-md mb-8 text-lg">
-                    Start adding your travel memories to build your personal travel map.
+                    This user hasn't added any trips yet.
                   </p>
-                  <Button 
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="px-6 py-2.5 text-base"
-                  >
-                    <Plus className="h-5 w-5 mr-2" />
-                    <span>Add Trip</span>
-                  </Button>
                 </div>
               )}
             </div>
           </div>
-        </div>
-
-        <div className="fixed bottom-8 right-8 z-10">
-          <Button 
-            className="rounded-full h-16 w-16 shadow-lg hover:shadow-xl transition-all duration-200 bg-black text-white" 
-            size="icon"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="h-7 w-7" />
-          </Button>
         </div>
       </main>
 
@@ -265,11 +236,6 @@ export default function TripsPage() {
           onClose={() => setSelectedTrip(null)}
         />
       )}
-
-      <AddTripModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-      />
 
       <Footer />
     </div>

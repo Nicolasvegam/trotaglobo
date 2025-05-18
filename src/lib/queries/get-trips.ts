@@ -1,7 +1,7 @@
 import { TripAdapter } from "../adapter/trip.adapter";
 import { createClientSupabaseClient } from "../auth/utils/create-client-supabase-client";
 
-export async function getTrips(token: string, userId: string): Promise<TripAdapter[]> {
+export async function getTrips(token: string | null, userId: string): Promise<TripAdapter[]> {
   const supabase = createClientSupabaseClient(token);
   const { data, error } = await supabase
     .from("trips")
